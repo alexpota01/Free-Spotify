@@ -1,0 +1,645 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>Free Spotify • My Music</title>
+<style>
+:root{color-scheme:dark;--bg:#0b0d0c;--surface:#171a18;--surface2:#222724;--muted:#a3aca5;--green:#1ed760;--line:#2b322d}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:#fff;font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden}
+button,input{font:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.app{height:100dvh;display:grid;grid-template-columns:205px minmax(0,1fr) 365px;gap:8px;padding:8px}
+.sidebar,.browse,.player-pane{border-radius:14px;min-height:0}
+.sidebar{background:var(--surface);padding:24px 12px}
+.brand{display:flex;align-items:center;gap:9px;padding:4px 10px 34px;color:var(--green);font-size:21px;font-weight:800;letter-spacing:-.8px}
+.brand-symbol{background:var(--green);color:#0b0d0c;border-radius:50%;width:32px;height:32px;display:grid;place-items:center;font-size:21px}
+.nav{display:flex;align-items:center;gap:13px;border:0;border-radius:9px;background:none;color:var(--muted);width:100%;padding:13px;font-weight:650;text-align:left}
+.nav:hover,.nav.active{background:#292e2a;color:#fff}
+.nav-ico{font-size:20px;width:24px;text-align:center}
+.side-caption{border-top:1px solid var(--line);margin:25px 7px 0;padding-top:19px;color:var(--muted);font-size:12px}
+.browse{background:linear-gradient(180deg,#234834 0,#181f1b 230px,#131614 490px);padding:32px clamp(16px,3.5vw,45px);overflow-y:auto}
+.eyebrow{font-size:11px;font-weight:800;color:#76eca0;letter-spacing:2px;text-transform:uppercase}
+h1{font-size:clamp(29px,4vw,49px);line-height:1.1;letter-spacing:-1.6px;margin:8px 0 9px}
+.subtle{color:var(--muted);margin:0 0 22px}
+.search-form{display:flex;gap:9px;max-width:780px;margin:24px 0}
+.search-input{min-width:0;flex:1;padding:14px 18px;border:1px solid #4a594d;border-radius:999px;background:#252f28;color:#fff}
+.primary{border:0;background:var(--green);color:#06130a;border-radius:999px;padding:11px 21px;font-weight:800}
+.primary:hover,.big-play:hover{filter:brightness(1.09);transform:scale(1.025)}
+.primary:disabled{opacity:.55;cursor:wait}
+.heading-line{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:27px 0 10px}
+h2{margin:0;font-size:23px;letter-spacing:-.5px}
+.status{color:var(--muted);font-size:13px;margin:9px 0 18px;min-height:19px}
+.song-list{display:grid;gap:4px}
+.song{display:flex;align-items:center;gap:13px;padding:9px 11px;border-radius:9px;min-width:0;border:1px solid transparent;background:transparent;color:#fff;text-align:left;width:100%}
+.song:hover{background:#ffffff12}
+.song.current{background:#21412b;border-color:#336845}
+.song-cover{flex:none;width:54px;height:54px;border-radius:7px;background:linear-gradient(135deg,#25583b,#101d14);object-fit:cover;display:grid;place-items:center;font-size:24px}
+.song-info{min-width:0;flex:1}
+.song-title{font-weight:680;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.song-artist{color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.song-actions{display:flex;gap:4px;flex:none}
+.icon-btn{background:transparent;border:0;border-radius:50%;color:#c1c8c3;min-width:38px;min-height:38px;font-size:23px;display:grid;place-items:center}
+.icon-btn:hover,.icon-btn.selected{color:var(--green);background:#ffffff0d}
+.empty{padding:24px;border:1px dashed #435446;border-radius:12px;color:var(--muted);background:#151d17}
+.view[hidden]{display:none!important}
+.small{font-size:12px;color:var(--muted)}
+.player-pane{background:linear-gradient(160deg,#1b2d21,#181b19 44%);border:1px solid #2e3b31;display:flex;flex-direction:column;padding:17px 19px 18px;overflow-y:auto;overflow-x:hidden}
+.player-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:19px}
+.player-head strong{font-size:14px;letter-spacing:.2px}
+.player-head .pill{color:var(--green);background:#163321;border:1px solid #29573a;padding:4px 10px;border-radius:100px;font-size:11px}
+.art{width:100%;max-width:250px;aspect-ratio:1;align-self:center;border-radius:13px;object-fit:cover;box-shadow:0 16px 25px #0007;background:linear-gradient(135deg,#1e6940,#101b14)}
+.art-fallback[hidden]{display:none}
+.art-fallback{width:100%;max-width:250px;aspect-ratio:1;display:grid;place-items:center;align-self:center;border-radius:13px;font-size:85px;color:#b7f0ca;background:linear-gradient(135deg,#205c37,#0f1e15)}
+.track-head{margin:20px 0 15px;display:flex;align-items:center;gap:9px}
+.track-head-info{flex:1;min-width:0}
+.track-head h3{font-size:20px;line-height:1.3;letter-spacing:-.5px;margin:0 0 5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.track-head p{color:var(--muted);margin:0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.video-wrap{width:100%;margin:8px 0 12px;background:#000;border-radius:9px;overflow:hidden;min-height:210px}
+.video-wrap[hidden]{display:none}
+#youtubePlayer,#youtubePlayer iframe{width:100%!important;height:210px!important;min-height:210px;border:0;display:block}
+.player-message{font-size:12px;color:#b7c0b9;min-height:18px;margin:6px 0 11px}
+.source-link{color:#95f6b5;text-decoration:none;font-size:12px}
+.source-link:hover{text-decoration:underline}
+.source-link[hidden]{display:none}
+.timeline{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--muted)}
+.timeline input{flex:1;min-width:0}
+input[type=range]{accent-color:var(--green);cursor:pointer}
+.player-controls{display:flex;align-items:center;justify-content:center;gap:14px;margin:17px 0 21px}
+.control{border:0;background:transparent;color:#dce3dd;font-size:23px;padding:6px;min-width:34px;min-height:34px}
+.control.on{color:var(--green)}
+.big-play{width:62px;height:62px;border-radius:50%;border:0;background:var(--green);color:#06150a;font-size:28px;display:grid;place-items:center}
+.volume-row{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px}
+.volume-row input{width:100%}
+.player-foot{margin-top:auto;padding-top:16px;font-size:12px;color:var(--muted)}
+.mobile-player-launch,.mobile-close{display:none}
+@media (max-width:1120px){.app{grid-template-columns:73px minmax(0,1fr) 330px}.sidebar{padding:16px 5px}.brand{padding:4px 8px 27px}.brand-name,.nav span.label,.side-caption{display:none}.nav{justify-content:center}.player-pane{padding:16px 12px}}
+@media (max-width:780px){
+  .app{grid-template-columns:61px minmax(0,1fr);gap:5px;padding:5px}
+  .browse{padding:23px 15px 90px}
+  .brand-symbol{width:30px;height:30px}
+  .player-pane{position:fixed;top:0;right:0;bottom:0;height:100dvh;width:min(94vw,390px);z-index:20;transform:translateX(103%);transition:transform .23s ease;box-shadow:-20px 0 30px #0009;border-radius:18px 0 0 18px;padding:20px}
+  .player-pane.open{transform:translateX(0)}
+  .mobile-player-launch{display:flex;align-items:center;gap:8px;position:fixed;bottom:16px;right:13px;z-index:10;padding:13px 18px;background:var(--green);border:none;border-radius:999px;color:#09210e;font-weight:800;box-shadow:0 8px 24px #000a}
+  .mobile-close{display:grid}
+  body.drawer-open .mobile-player-launch{display:none}
+  .search-form{flex-wrap:wrap}.search-input{flex-basis:100%}.primary{width:100%}
+  .song-cover{width:44px;height:44px}.song{gap:8px;padding:8px 4px}.icon-btn{min-width:30px;font-size:19px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-symbol">♫</span><span class="brand-name">Free Spotify</span></div>
+    <button type="button" class="nav active" id="nav-discover" data-view="discover"><span class="nav-ico">⌕</span><span class="label">Discover</span></button>
+    <button type="button" class="nav" id="nav-library" data-view="library"><span class="nav-ico">▤</span><span class="label">My Library</span></button>
+    <button type="button" class="nav" id="nav-favorites" data-view="favorites"><span class="nav-ico">♥</span><span class="label">Favorites</span></button>
+    <p class="side-caption">Your player, your playlists, your music.</p>
+  </aside>
+
+  <main class="browse">
+    <div class="eyebrow">Made for your listening</div>
+    <h1>Music, your way.</h1>
+    <p class="subtle">Find your next favorite track. Play it from the player on the right.</p>
+
+    <section id="view-discover" class="view">
+      <form id="searchForm" class="search-form">
+        <input id="onlineQuery" class="search-input" placeholder="Search a song or artist, e.g. Eminem" autocomplete="off" maxlength="150" aria-label="Search online music">
+        <button id="searchButton" class="primary" type="submit">Search music</button>
+      </form>
+      <div class="heading-line"><h2>Search results</h2><span class="small">YouTube Music search</span></div>
+      <div id="searchStatus" class="status">Search to discover music.</div>
+      <div id="onlineResults" class="song-list"></div>
+    </section>
+
+    <section id="view-library" class="view" hidden>
+      <div class="heading-line"><h2>My music files</h2></div>
+      <p class="subtle">Files you upload stay in this private Codespace until you delete the Codespace.</p>
+      <label class="primary" for="files" style="display:inline-block;cursor:pointer">+ Add music files</label>
+      <input id="files" type="file" accept="audio/*" multiple hidden>
+      <div id="libraryStatus" class="status">Loading...</div>
+      <div id="localResults" class="song-list"></div>
+    </section>
+
+    <section id="view-favorites" class="view" hidden>
+      <div class="heading-line"><h2>Liked songs</h2></div>
+      <p class="subtle">Saved locally in your app's SQLite database.</p>
+      <h3>Online favorites</h3>
+      <div id="favoriteOnlineResults" class="song-list"></div>
+      <h3 style="margin-top:26px">My files</h3>
+      <div id="favoriteLocalResults" class="song-list"></div>
+    </section>
+  </main>
+
+  <aside class="player-pane" id="playerPane" aria-label="Music player">
+    <div class="player-head">
+      <strong>Now playing</strong>
+      <div style="display:flex;align-items:center;gap:8px"><span class="pill">♫ My player</span><button class="icon-btn mobile-close" id="closePane" aria-label="Close player">×</button></div>
+    </div>
+    <img id="playerArt" class="art" alt="Album artwork" hidden>
+    <div id="artFallback" class="art-fallback">♫</div>
+    <div class="track-head">
+      <div class="track-head-info"><h3 id="currentTitle">Nothing playing</h3><p id="currentArtist">Search for music or open your library.</p></div>
+      <button id="heartCurrent" class="icon-btn" title="Toggle favorite" aria-label="Toggle favorite">♡</button>
+    </div>
+
+    <!-- The official YouTube player remains visible and unobstructed when online audio plays. -->
+    <div id="youtubeWrap" class="video-wrap" hidden><div id="youtubePlayer"></div></div>
+    <div id="playerMessage" class="player-message">Select a track to start listening.</div>
+    <a id="youtubeLink" class="source-link" href="#" target="_blank" rel="noopener noreferrer" hidden>Watch on YouTube ↗</a>
+
+    <div class="timeline" style="margin-top:18px">
+      <span id="elapsed">0:00</span>
+      <input type="range" id="progress" min="0" max="1000" value="0" aria-label="Playback position">
+      <span id="duration">0:00</span>
+    </div>
+    <div class="player-controls">
+      <button id="shuffle" class="control" title="Shuffle" aria-label="Shuffle">⤨</button>
+      <button id="previous" class="control" title="Previous" aria-label="Previous song">⏮</button>
+      <button id="play" class="big-play" title="Play or pause" aria-label="Play or pause">▶</button>
+      <button id="next" class="control" title="Next" aria-label="Next song">⏭</button>
+      <button id="repeat" class="control" title="Repeat one" aria-label="Repeat one">↻</button>
+    </div>
+    <div class="volume-row"><span>🔊</span><input id="volume" type="range" min="0" max="100" value="70" aria-label="Volume"><span id="volumeValue">70%</span></div>
+    <p class="player-foot">For online songs, playback uses the visible official YouTube player. Some videos cannot be embedded, and phone browsers may require a second tap to begin.</p>
+  </aside>
+</div>
+
+<button id="openPane" class="mobile-player-launch" type="button">♫ <span id="miniTrack">Open player</span></button>
+<audio id="localAudio" preload="metadata"></audio>
+<script>
+'use strict';
+
+const el = id => document.getElementById(id);
+const audio = el('localAudio');
+audio.volume = 0.7;
+let localSongs = [];
+let onlineFavorites = [];
+let searchResults = [];
+let current = null;
+let queue = [];
+let queuePosition = -1;
+let ytReady = false;
+let ytPlayer = null;
+let ytPlayerReady = false;
+let shuffled = false;
+let repeatOne = false;
+let searchSerial = 0;
+
+async function jsonRequest(path, options = {}) {
+  const response = await fetch(path, options);
+  let data;
+  try { data = await response.json(); }
+  catch { throw new Error('Invalid response from Flask'); }
+  if (!response.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+function showView(view) {
+  for (const name of ['discover', 'library', 'favorites']) {
+    el('view-' + name).hidden = name !== view;
+    el('nav-' + name).classList.toggle('active', name === view);
+  }
+}
+for (const nav of document.querySelectorAll('.nav[data-view]')) {
+  nav.addEventListener('click', () => showView(nav.dataset.view));
+}
+
+function openPlayer() {
+  el('playerPane').classList.add('open');
+  document.body.classList.add('drawer-open');
+}
+function closePlayer() {
+  // Do not let online playback continue while the required video is hidden.
+  if (current && current.source === 'online' && ytPlayer && ytPlayerReady) {
+    ytPlayer.pauseVideo();
+    setMessage('Paused because the YouTube video player was closed.');
+  }
+  el('playerPane').classList.remove('open');
+  document.body.classList.remove('drawer-open');
+}
+el('openPane').addEventListener('click', openPlayer);
+el('closePane').addEventListener('click', closePlayer);
+
+function localTrack(song) {
+  return {source: 'local', id: song.id, title: song.title,
+    artist: 'My Library', filename: song.filename, cover: '', favorite: song.favorite};
+}
+function onlineTrack(song) {
+  return {source: 'online', id: song.id, title: song.title,
+    artist: song.artist || 'YouTube Music', cover: song.cover || ''};
+}
+function isFavorite(track) {
+  if (!track) return false;
+  return track.source === 'online'
+    ? onlineFavorites.some(item => item.id === track.id)
+    : localSongs.some(item => item.id === track.id && item.favorite === 1);
+}
+
+function emptyRow(message) {
+  const div = document.createElement('div');
+  div.className = 'empty';
+  div.textContent = message;
+  return div;
+}
+
+function songRow(track, tracks, {deletable = false} = {}) {
+  const row = document.createElement('div');
+  row.className = 'song';
+  if (current && current.source === track.source && current.id === track.id) row.classList.add('current');
+
+  let cover;
+  if (track.cover && /^https:\/\//.test(track.cover)) {
+    cover = document.createElement('img');
+    cover.src = track.cover;
+    cover.alt = '';
+    cover.loading = 'lazy';
+    cover.className = 'song-cover';
+  } else {
+    cover = document.createElement('div');
+    cover.className = 'song-cover';
+    cover.textContent = '♫';
+  }
+  const info = document.createElement('div');
+  info.className = 'song-info';
+  const name = document.createElement('div');
+  name.className = 'song-title';
+  name.textContent = track.title;
+  const artist = document.createElement('div');
+  artist.className = 'song-artist';
+  artist.textContent = track.artist;
+  info.append(name, artist);
+
+  const actions = document.createElement('div');
+  actions.className = 'song-actions';
+  const heart = document.createElement('button');
+  heart.type = 'button';
+  heart.className = 'icon-btn' + (isFavorite(track) ? ' selected' : '');
+  heart.textContent = isFavorite(track) ? '♥' : '♡';
+  heart.title = 'Toggle favorite';
+  heart.setAttribute('aria-label', 'Toggle favorite');
+  heart.addEventListener('click', async event => {
+    event.stopPropagation();
+    await toggleFavorite(track);
+  });
+  actions.append(heart);
+
+  if (deletable) {
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'icon-btn';
+    remove.textContent = '×';
+    remove.title = 'Delete uploaded file';
+    remove.addEventListener('click', async event => {
+      event.stopPropagation();
+      if (!confirm(`Remove '${track.title}' from your library?`)) return;
+      try {
+        await jsonRequest(`/api/songs/${track.id}`, {method: 'DELETE'});
+        if (current && current.source === 'local' && current.id === track.id) {
+          audio.pause();
+          audio.removeAttribute('src');
+          audio.load();
+          current = null;
+          setPlayerTitle();
+        }
+        await refreshLibrary();
+      } catch (error) { alert(error.message); }
+    });
+    actions.append(remove);
+  }
+  row.append(cover, info, actions);
+  row.addEventListener('click', () => chooseTrack(track, tracks));
+  return row;
+}
+
+function fillRows(containerId, tracks, options = {}) {
+  const container = el(containerId);
+  container.replaceChildren();
+  if (!tracks.length) {
+    container.append(emptyRow(options.empty || 'Nothing here yet.'));
+    return;
+  }
+  for (const track of tracks) container.append(songRow(track, tracks, options));
+}
+
+function render() {
+  const local = localSongs.map(localTrack);
+  const savedOnline = onlineFavorites.map(onlineTrack);
+  fillRows('onlineResults', searchResults, {empty: 'Search for songs or artists above.'});
+  fillRows('localResults', local, {deletable: true, empty: 'No uploads yet. Add a song file to begin.'});
+  fillRows('favoriteOnlineResults', savedOnline, {empty: 'Heart an online search result to save it here.'});
+  fillRows('favoriteLocalResults', local.filter(item => isFavorite(item)), {deletable: true, empty: 'No liked local songs yet.'});
+  el('libraryStatus').textContent = `${localSongs.length} uploaded songs`;
+  el('heartCurrent').textContent = isFavorite(current) ? '♥' : '♡';
+  el('heartCurrent').classList.toggle('selected', isFavorite(current));
+}
+
+async function refreshLibrary() {
+  [localSongs, onlineFavorites] = await Promise.all([
+    jsonRequest('/api/songs'), jsonRequest('/api/online-favorites')
+  ]);
+  render();
+}
+
+async function toggleFavorite(track) {
+  if (!track) return;
+  try {
+    if (track.source === 'online') {
+      if (isFavorite(track)) {
+        await jsonRequest(`/api/online-favorites/${encodeURIComponent(track.id)}`, {method: 'DELETE'});
+      } else {
+        await jsonRequest('/api/online-favorites', {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(track)
+        });
+      }
+    } else {
+      await jsonRequest(`/api/songs/${track.id}/favorite`, {method: 'POST'});
+    }
+    await refreshLibrary();
+  } catch (error) { alert(error.message); }
+}
+el('heartCurrent').addEventListener('click', () => toggleFavorite(current));
+
+el('searchForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const query = el('onlineQuery').value.trim();
+  if (!query) return;
+  const serial = ++searchSerial;
+  el('searchButton').disabled = true;
+  el('searchStatus').textContent = 'Searching YouTube Music...';
+  try {
+    const songs = await jsonRequest('/api/online-search?q=' + encodeURIComponent(query));
+    if (serial !== searchSerial) return;
+    searchResults = songs.map(onlineTrack);
+    el('searchStatus').textContent = `${searchResults.length} tracks found. Select a track to play.`;
+    render();
+  } catch (error) {
+    el('searchStatus').textContent = error.message;
+  } finally { el('searchButton').disabled = false; }
+});
+
+el('files').addEventListener('change', async event => {
+  const input = event.target;
+  if (!input.files.length) return;
+  const form = new FormData();
+  for (const file of input.files) form.append('files', file);
+  el('libraryStatus').textContent = 'Uploading...';
+  try {
+    const result = await jsonRequest('/api/upload', {method: 'POST', body: form});
+    await refreshLibrary();
+    el('libraryStatus').textContent = `${result.added} file(s) uploaded`;
+  } catch (error) { el('libraryStatus').textContent = error.message; }
+  input.value = '';
+});
+
+function setPlayerTitle() {
+  el('currentTitle').textContent = current ? current.title : 'Nothing playing';
+  el('currentArtist').textContent = current ? current.artist : 'Select a track to start.';
+  el('miniTrack').textContent = current ? current.title.slice(0, 20) : 'Open player';
+  if (current && current.cover && /^https:\/\//.test(current.cover)) {
+    el('playerArt').src = current.cover;
+    el('playerArt').hidden = false;
+    el('artFallback').hidden = true;
+  } else {
+    el('playerArt').hidden = true;
+    el('artFallback').hidden = false;
+  }
+  el('heartCurrent').textContent = isFavorite(current) ? '♥' : '♡';
+}
+function setMessage(message) { el('playerMessage').textContent = message; }
+function setPlayIcon(isPlaying) { el('play').textContent = isPlaying ? '⏸' : '▶'; }
+function formatTime(value) {
+  if (!Number.isFinite(value) || value < 0) return '0:00';
+  const sec = Math.floor(value);
+  return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+}
+function updateTimeline(elapsed, duration) {
+  el('elapsed').textContent = formatTime(elapsed);
+  el('duration').textContent = formatTime(duration);
+  if (!el('progress').matches(':active')) {
+    el('progress').value = duration > 0 ? Math.floor(elapsed / duration * 1000) : 0;
+  }
+}
+
+function chooseTrack(track, tracks) {
+  current = {...track};
+  queue = tracks.map(item => ({...item}));
+  queuePosition = queue.findIndex(item => item.id === current.id && item.source === current.source);
+  setPlayerTitle();
+  updateTimeline(0, 0);
+  openPlayer();
+  render();
+
+  if (track.source === 'local') {
+    if (ytPlayer && ytPlayerReady) ytPlayer.pauseVideo();
+    el('youtubeWrap').hidden = true;
+    el('youtubeLink').hidden = true;
+    audio.src = '/media/' + encodeURIComponent(track.filename);
+    audio.play().then(() => setMessage('Playing from your library.'))
+      .catch(() => setMessage('Tap Play to start this file, or try a supported audio format.'));
+  } else {
+    audio.pause();
+    el('youtubeWrap').hidden = false;
+    el('youtubeLink').hidden = false;
+    el('youtubeLink').href = 'https://www.youtube.com/watch?v=' + encodeURIComponent(track.id);
+    setMessage('Loading YouTube player. If autoplay is blocked, tap Play inside the video.');
+    startOnlineVideo(track.id);
+  }
+}
+
+function startOnlineVideo(videoId) {
+  if (!/^[A-Za-z0-9_-]{11}$/.test(videoId)) {
+    setMessage('This result does not have a usable YouTube video ID.');
+    return;
+  }
+  if (!ytReady) {
+    setMessage('Loading the YouTube playback engine. Tap Play again in a moment if needed.');
+    return;
+  }
+
+  // Use the existing player for subsequent tracks.
+  if (ytPlayer) {
+    if (ytPlayerReady) {
+      try { ytPlayer.loadVideoById(videoId); }
+      catch (error) {
+        console.error('YouTube player failed:', error);
+        setMessage('Player failed. Refresh the page and select the song again.');
+      }
+    } else {
+      setMessage('Player is still initializing. Tap the video Play button when it appears.');
+    }
+    return;
+  }
+
+  // YouTube requires the embedding page's HTTP Referer. Constructing the
+  // iframe ourselves lets us set the recommended policy explicitly.
+  const iframe = document.createElement('iframe');
+  iframe.id = 'youtubePlayer';
+  iframe.width = '100%';
+  iframe.height = '210';
+  iframe.title = 'YouTube video player';
+  iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+  iframe.allow = 'autoplay; encrypted-media; picture-in-picture';
+  iframe.allowFullscreen = true;
+  iframe.src = 'https://www.youtube.com/embed/' + videoId +
+    '?enablejsapi=1&playsinline=1&controls=1&origin=' +
+    encodeURIComponent(location.origin);
+  el('youtubeWrap').replaceChildren(iframe);
+
+  ytPlayerReady = false;
+  ytPlayer = new YT.Player('youtubePlayer', {
+    events: {
+      onReady: event => {
+        ytPlayerReady = true;
+        event.target.setVolume(Number(el('volume').value));
+        if (current && current.source === 'online') {
+          // A different track might have been selected while loading.
+          if (current.id !== videoId) event.target.loadVideoById(current.id);
+          else event.target.playVideo();
+        }
+      },
+      onStateChange: event => {
+        if (!current || current.source !== 'online') return;
+        if (event.data === YT.PlayerState.PLAYING) {
+          setPlayIcon(true);
+          setMessage('Playing. You can use the green playback controls.');
+        } else if (event.data === YT.PlayerState.PAUSED) {
+          setPlayIcon(false);
+          setMessage('Paused.');
+        } else if (event.data === YT.PlayerState.ENDED) {
+          setPlayIcon(false);
+          advance(1, true);
+        }
+      },
+      onError: event => {
+        setPlayIcon(false);
+        const messages = {
+          2: 'Invalid YouTube video ID.',
+          5: 'YouTube could not play this video in HTML5.',
+          100: 'This video is unavailable or private.',
+          101: 'The owner does not allow embedded playback.',
+          150: 'The owner does not allow embedded playback.',
+          153: 'YouTube error 153: missing Referer/client identification. Your browser or Codespaces proxy may block it.'
+        };
+        setMessage((messages[event.data] || 'YouTube playback error ' + event.data + '.') +
+          ' Use the Watch on YouTube link below as a diagnostic.');
+        console.warn('YouTube IFrame API error', event.data, {
+          origin: location.origin,
+          referrerPolicy: iframe.referrerPolicy,
+          videoId: current && current.id
+        });
+      },
+      onAutoplayBlocked: () => {
+        setPlayIcon(false);
+        setMessage('Autoplay was blocked. Tap Play inside the visible video, then use the green buttons.');
+      }
+    }
+  });
+}
+window.onYouTubeIframeAPIReady = () => {
+  ytReady = true;
+  if (current && current.source === 'online') startOnlineVideo(current.id);
+};
+
+function togglePlayback() {
+  if (!current) {
+    if (searchResults.length) chooseTrack(searchResults[0], searchResults);
+    else if (localSongs.length) {
+      const list = localSongs.map(localTrack);
+      chooseTrack(list[0], list);
+    } else setMessage('Search for a song or upload a music file first.');
+    return;
+  }
+  if (current.source === 'local') {
+    if (audio.paused) audio.play().catch(() => setMessage('Your browser could not play this audio file.'));
+    else audio.pause();
+  } else if (ytPlayer && ytPlayerReady) {
+    if (ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) ytPlayer.pauseVideo();
+    else ytPlayer.playVideo();
+  } else {
+    startOnlineVideo(current.id);
+  }
+}
+
+function advance(direction, fromEnd = false) {
+  if (!queue.length) return;
+  if (fromEnd && repeatOne && current) {
+    chooseTrack(current, queue);
+    return;
+  }
+  if (queue.length === 1 && fromEnd) return;
+  let index = queuePosition;
+  if (shuffled && queue.length > 1 && direction > 0) {
+    let target = index;
+    while (target === index) target = Math.floor(Math.random() * queue.length);
+    index = target;
+  } else {
+    index = (index + direction + queue.length) % queue.length;
+  }
+  chooseTrack(queue[index], queue);
+}
+
+el('play').addEventListener('click', togglePlayback);
+el('previous').addEventListener('click', () => advance(-1));
+el('next').addEventListener('click', () => advance(1));
+el('shuffle').addEventListener('click', () => {
+  shuffled = !shuffled;
+  el('shuffle').classList.toggle('on', shuffled);
+});
+el('repeat').addEventListener('click', () => {
+  repeatOne = !repeatOne;
+  el('repeat').classList.toggle('on', repeatOne);
+});
+
+el('volume').addEventListener('input', event => {
+  const amount = Number(event.target.value);
+  audio.volume = amount / 100;
+  el('volumeValue').textContent = amount + '%';
+  if (ytPlayer && ytPlayerReady) ytPlayer.setVolume(amount);
+});
+el('progress').addEventListener('change', event => {
+  if (!current) return;
+  let duration = 0;
+  if (current.source === 'local') duration = audio.duration;
+  else if (ytPlayer && ytPlayerReady) duration = ytPlayer.getDuration();
+  if (!Number.isFinite(duration) || duration <= 0) return;
+  const target = Number(event.target.value) / 1000 * duration;
+  if (current.source === 'local') audio.currentTime = target;
+  else ytPlayer.seekTo(target, true);
+});
+
+audio.addEventListener('timeupdate', () => {
+  if (current && current.source === 'local') updateTimeline(audio.currentTime, audio.duration);
+});
+audio.addEventListener('loadedmetadata', () => {
+  if (current && current.source === 'local') updateTimeline(audio.currentTime, audio.duration);
+});
+audio.addEventListener('play', () => {
+  if (current && current.source === 'local') setPlayIcon(true);
+});
+audio.addEventListener('pause', () => {
+  if (current && current.source === 'local') setPlayIcon(false);
+});
+audio.addEventListener('ended', () => advance(1, true));
+window.setInterval(() => {
+  if (current && current.source === 'online' && ytPlayer && ytPlayerReady) {
+    try { updateTimeline(ytPlayer.getCurrentTime(), ytPlayer.getDuration()); }
+    catch { /* Player may be transitioning between videos. */ }
+  }
+}, 650);
+
+refreshLibrary().catch(error => {
+  el('libraryStatus').textContent = error.message;
+  el('searchStatus').textContent = 'Could not load the library: ' + error.message;
+});
+render();
+</script>
+<script src="https://www.youtube.com/iframe_api" async></script>
+</body>
+</html>
